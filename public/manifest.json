@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Articulate",
+    "version": "1.0.0",
+    "description": "Generate polished comments on LinkedIn posts using AI",
+    "permissions": ["storage", "activeTab", "scripting"],
+    "action": { "default_popup": "index.html" },
+    "options_page": "options.html",
+    "background": { "service_worker": "src/background.ts" },
+    "content_scripts": [
+      {
+        "matches": ["*://www.linkedin.com/*"],
+        "js": ["src/contentScript.tsx"]
+      }
+    ]
+  }
+  
