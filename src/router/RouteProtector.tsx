@@ -12,13 +12,9 @@ export const RouteProtector = () => {
     }
   }, [isLoaded, isSignedIn, navigate]);
 
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isSignedIn) {
+  if (!isLoaded || !isSignedIn) {
     return null; // Navigation happens in useEffect
   }
-  
+
   return <Outlet />;
 };

@@ -3,14 +3,19 @@ import { useUser } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { getAIConfigsByUser, type DBInterface } from "@/supabase/db_service";
-import { saveToLocalStorage } from "@/helpers/localStorageHelpers";
+import {
+  getFromLocalStorage,
+  saveToLocalStorage,
+} from "@/helpers/localStorageHelpers";
 
 /**
- * Hook to fetch and store the user's AI config after login
+ * Hook to fetch and store the user's AI config after login.
+ * If a valid config exists in localStorage, it avoids calling Supabase.
  */
 export function useFetchUserConfig() {
   const { user, isSignedIn } = useUser();
   const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(true);
   const [userConfig, setUserConfig] = useState<DBInterface | null>(null);
 
@@ -18,12 +23,24 @@ export function useFetchUserConfig() {
     if (!isSignedIn || !user) return;
 
     const fetchConfig = async () => {
+      // 1. Check localStorage first
+      const localConfig = getFromLocalStorage<DBInterface>("user_config");
+
+      // 2. If valid config exists, use it and skip fetching
+      if (localConfig?.user_id === user.id) {
+        setUserConfig(localConfig);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Else, fetch from Supabase
       try {
         const configs = await getAIConfigsByUser(user.id);
 
         if (configs.length > 0) {
-          saveToLocalStorage<DBInterface>("user_config", configs[0]); // You can choose latest or prompt if multiple
-          setUserConfig(configs[0]);
+          const config = configs[0];
+          saveToLocalStorage("user_config", config);
+          setUserConfig(config);
           toast.success("AI Configuration loaded successfully.");
         } else {
           saveToLocalStorage("user_config", null);
