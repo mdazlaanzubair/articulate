@@ -1,4 +1,4 @@
-import logo from "../assets/articulate.png";
+import logo from "../../../assets/articulate.png";
 import { MoonStar, Sun } from "lucide-react";
 
 interface Props {

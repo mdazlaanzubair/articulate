@@ -1,8 +1,6 @@
+import { getArticulateDropdown } from "./articulateDropdown";
+
 // list of target of DOM elements
-
-import type { PostContextInterface } from "../types";
-import { generateDynamicPrompt } from "./promptGenerator";
-
 /**
  * Set a value in Chrome local storage.
  * @key feeds - Contains the selector for main feeds container and used to observe mutations.
@@ -56,27 +54,37 @@ const getCommentForm = (node: Element) => {
   const element = node as Element;
 
   const commentBoxes = element.querySelectorAll(SELECT_TARGET.comment_form);
-  if (commentBoxes.length > 0) {
-    console.log("NODE", node);
-    console.log("Comment Boxes", commentBoxes.length);
-  }
   commentBoxes.forEach((commentBox) => {
     // check of the form is an instance of HTML type
     if (commentBox instanceof HTMLElement) {
+      // In order to avoid double injection of the button a custom
+      // 'data' attribute is being attached with the comment-box
+      // ★ NEW: if we’ve already injected into this box, bail out
+      if (commentBox.hasAttribute("data-articulate-injected")) return;
+
+      // ★ NEW: mark it so we never inject again
+      commentBox.setAttribute("data-articulate-injected", "true");
+
       // Applying style for visibility in UI
       commentBox.style.borderRadius = "6px";
       commentBox.style.border = "4px solid red";
 
       // Injecting the button into action items row
       const actionBtnRow = commentBox.querySelector(SELECT_TARGET.inject);
-      actionBtnRow && getInjectableBtn(commentBox, actionBtnRow);
-      console.log("Injecting Done:", actionBtnRow);
+
+      // If row exist
+      if (actionBtnRow) {
+        const dropdown = getArticulateDropdown(commentBox);
+
+        // Injecting button to the comment
+        actionBtnRow.prepend(dropdown);
+      }
     }
   });
 };
 
 //  Function to get the main feed item associated with comment-box as main parent node i.e. `feed_item`
-const getFeedItem = (commentBox: Element): Element | null | void => {
+export const getFeedItem = (commentBox: Element): Element | null | void => {
   // Getting parent of comment-box
   let node: Element | null = commentBox.parentElement;
 
@@ -106,7 +114,7 @@ const getFeedItem = (commentBox: Element): Element | null | void => {
 };
 
 // Function to get post content from the feed item i.e. `post`
-const getPostContent = (feedItem: Element): string | null | void => {
+export const getPostContent = (feedItem: Element): string | null | void => {
   const postContainer = feedItem.querySelector(SELECT_TARGET.post);
 
   // return `null` if element doesn't exist or not an instance of HTML type
@@ -125,7 +133,7 @@ const getPostContent = (feedItem: Element): string | null | void => {
 };
 
 // Function to get author name from the feed item i.e. `author`
-const getAuthorName = (feedItem: Element): string | null | void => {
+export const getAuthorName = (feedItem: Element): string | null | void => {
   const authorContainer = feedItem.querySelector(SELECT_TARGET.author);
 
   // return `null` if element doesn't exist or not an instance of HTML type
@@ -146,89 +154,12 @@ const getAuthorName = (feedItem: Element): string | null | void => {
   return removeDuplicateSubstring(textContent.trim());
 };
 
-// Function to create injectable dropdown button for articulation
-const getInjectableBtn = (commentBox: Element, actionBtnRow: Element): void => {
-  // create a button
-  const btn = document.createElement("button");
-  btn.setAttribute("type", "button");
-  btn.setAttribute("role", "button");
-  btn.setAttribute("title", "Articulate");
-  btn.style.width = "4rem";
-  btn.style.height = "4rem";
-  btn.style.borderRadius = "50%";
-  btn.style.backgroundColor = "#8c8c8c00";
-  btn.style.color = "#155dfc";
-
-  // applying hover effect
-  const onHover = (hex_code: string) => (btn.style.backgroundColor = hex_code);
-  btn.addEventListener("mouseenter", () => onHover("#8c8c8c1a"));
-  btn.addEventListener("mouseleave", () => onHover("#8c8c8c00"));
-
-  // Injecting icon to the button
-  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb-icon lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
-
-  // Attaching event with th button
-  btn.addEventListener("click", () => articulateComment(commentBox));
-
-  // Injecting button to the comment
-  actionBtnRow.prepend(btn);
-};
-
-// Event listener function to be attached with the articulate injectable button
-const articulateComment = (commentBox: Element) => {
-  // Object to contain all context required for comment generation
-  const postContext: PostContextInterface = {
-    tone: "professional",
-    author: null,
-    post: null,
-    user_comment: null,
-  };
-
-  // 1. Checking if user comment exist
-  const qlEditor = commentBox.querySelector(SELECT_TARGET.comment_editor);
-  if (qlEditor) {
-    // Checking if the comment-box is not empty
-    const isBlank = qlEditor.classList.contains(
-      SELECT_TARGET.comment_editor_blank
-    );
-
-    if (!isBlank) {
-      const textContent = qlEditor.textContent;
-      postContext.user_comment = textContent && textContent?.trim();
-    }
-  }
-
-  // 2. Getting feed item to extract the post and author information
-  const feedItem = getFeedItem(commentBox);
-
-  if (feedItem) {
-    // 2.a. Post Content
-    postContext.post = getPostContent(feedItem) || null;
-
-    // 2.b. Author Name
-    postContext.author = getAuthorName(feedItem) || null;
-  }
-
-  // 3. Generate Prompt from the post context
-  const { isError, error_msg, prompt } = generateDynamicPrompt(postContext);
-  console.log("<==============>");
-  console.log(" DYNAMIC PROMPT");
-  console.log("<==============>");
-  console.log(isError ? error_msg : prompt);
-
-  // 4. Pushing the generated comment back to the comment-box
-  if (qlEditor) {
-    qlEditor.innerHTML = `<p>${JSON.stringify(
-      isError ? error_msg : prompt
-    )}</p>`;
-  }
-};
-
-/**
- * If `s` contains N consecutive repeats of some substring X (i.e. X+X+…),
- * this will return just one copy of X. Otherwise returns s unchanged.
- */
+// Function to remove duplicates from author name string if-any
 const removeDuplicateSubstring = (s: string): string => {
+  /**
+   * If `s` contains N consecutive repeats of some substring X (i.e. X+X+…),
+   * this will return just one copy of X. Otherwise returns s unchanged.
+   */
   // (.+)   → capture as much as possible into group 1
   // \1+    → followed by one or more repeats of exactly that same group
   const re = /(.+)\1+/;

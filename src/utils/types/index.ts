@@ -24,7 +24,7 @@ export interface FormInterface {
 
 // Interface for post context object
 export interface PostContextInterface {
-  tone: "professional" | "concise" | "funny" | "friendly" | "proofread";
+  tone: ToneType;
   author: string | null;
   post: string | null;
   user_comment: string | null;
@@ -40,3 +40,11 @@ export interface PostContentValidation {
 export interface DynamicPromptInterface extends PostContentValidation {
   prompt: string | null;
 }
+
+// Type face for tones
+export type ToneType =
+  | "professional"
+  | "concise"
+  | "funny"
+  | "friendly"
+  | "proofread";

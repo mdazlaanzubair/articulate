@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Alert from "../../../../components/Alert";
+import Alert from "../../components/Alert";
 import type { AlertInterface, FormInterface } from "../../../../utils/types";
 import { gemini_models_list, openai_models_list } from "./components/constants";
 import { Eye, EyeOff } from "lucide-react";

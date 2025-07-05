@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Header } from "../../components/Header";
-import Footer from "../../components/Footer";
+import { Header } from "./components/Header";
+import Footer from "./components/Footer";
 import { appPages } from "./pages";
 import { FileWarning, House, Text, Webhook } from "lucide-react";
 

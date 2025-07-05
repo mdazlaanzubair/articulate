@@ -66,7 +66,7 @@ export const generateDynamicPrompt = (
   return {
     isError,
     error_msg,
-    prompt: isError ? null : BASE_PROMPT,
+    prompt: isError ? null : BASE_PROMPT.trim(),
   };
 };
 
