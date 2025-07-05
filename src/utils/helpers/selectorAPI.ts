@@ -1,6 +1,7 @@
 // list of target of DOM elements
 
 import type { PostContextInterface } from "../types";
+import { generateDynamicPrompt } from "./promptGenerator";
 
 /**
  * Set a value in Chrome local storage.
@@ -177,6 +178,7 @@ const getInjectableBtn = (commentBox: Element, actionBtnRow: Element): void => {
 const articulateComment = (commentBox: Element) => {
   // Object to contain all context required for comment generation
   const postContext: PostContextInterface = {
+    tone: "professional",
     author: null,
     post: null,
     user_comment: null,
@@ -208,15 +210,17 @@ const articulateComment = (commentBox: Element) => {
   }
 
   // 3. Generate Prompt from the post context
-  console.log("=============>");
-  console.log("POST:", postContext.post);
-  console.log(`BY: --${postContext.author}`);
-  console.log("User Comment:", postContext.user_comment);
-  console.log("=============>");
+  const { isError, error_msg, prompt } = generateDynamicPrompt(postContext);
+  console.log("<==============>");
+  console.log(" DYNAMIC PROMPT");
+  console.log("<==============>");
+  console.log(isError ? error_msg : prompt);
 
   // 4. Pushing the generated comment back to the comment-box
   if (qlEditor) {
-    qlEditor.innerHTML = `<p>${JSON.stringify(postContext)}</p>`;
+    qlEditor.innerHTML = `<p>${JSON.stringify(
+      isError ? error_msg : prompt
+    )}</p>`;
   }
 };
 
