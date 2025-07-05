@@ -21,3 +21,10 @@ export interface FormInterface {
   api_key: string;
   model: string;
 }
+
+// Interface for post context object
+export interface PostContextInterface {
+  author: string | null;
+  post: string | null;
+  user_comment: string | null;
+}

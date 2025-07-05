@@ -28,7 +28,7 @@ const GuideContent = (props: Props) => {
         target="_blank"
         rel="noreferrer"
         href={props.url}
-        className="btn btn-neutral btn-sm w-full"
+        className="btn btn-neutral btn-sm w-full rounded"
       >
         Checkout Official Docs
       </a>

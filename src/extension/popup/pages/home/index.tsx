@@ -14,14 +14,39 @@ const HomePage = () => {
     })();
   }, []);
 
+  // Function to redirect url on linkedin page
+  const handleGetStartedClick = async () => {
+    const linkedInUrl = "https://www.linkedin.com/feed/";
+
+    // Use Chrome API to search for existing LinkedIn tabs
+    const existingTabs = await chrome.tabs.query({ url: linkedInUrl + "*" });
+
+    if (existingTabs.length > 0) {
+      // If an existing LinkedIn tab is found, switch to it
+      await chrome.tabs.update(existingTabs[0].id!, { active: true });
+    } else {
+      // If no existing LinkedIn tab is found, create a new one
+      await chrome.tabs.create({ url: linkedInUrl });
+    }
+  };
+
   return (
-    <section className="w-full h-full flex flex-col items-center justify-center gap-5 overflow-x-hidden overflow-y-auto p-5">
+    <section className="w-full h-full flex flex-col items-center justify-center gap-3 overflow-x-hidden overflow-y-auto p-5">
       {isConfig ? (
-        <ConfigAlertMsg
-          type="success"
-          title="Welcome to Articulate!"
-          message="Use AI to articulate your thoughts into structured language."
-        />
+        <>
+          <ConfigAlertMsg
+            type="success"
+            title="Welcome to Articulate!"
+            message="Use AI to articulate your thoughts into structured language."
+          />
+          <button
+            type="button"
+            className="btn btn-sm w-full bg-blue-600 hover:bg-blue-700 text-slate-50 hover:text-white rounded"
+            onClick={handleGetStartedClick}
+          >
+            Lets Articulate
+          </button>
+        </>
       ) : (
         <ConfigAlertMsg
           type="error"

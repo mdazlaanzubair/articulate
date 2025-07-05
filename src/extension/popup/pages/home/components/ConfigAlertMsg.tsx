@@ -14,7 +14,7 @@ const ConfigAlertMsg = (prop: Prop) => {
         prop.type === "error"
           ? "alert-error border-red-500"
           : "alert-success border-emerald-500"
-      } alert-vertical sm:alert-horizontal rounded-lg`}
+      } alert-vertical sm:alert-horizontal rounded-lg gap-0`}
     >
       {prop.type === "error" ? (
         <OctagonAlert className="w-10 h-10 text-red-500" />
@@ -24,7 +24,7 @@ const ConfigAlertMsg = (prop: Prop) => {
 
       <div>
         <h3
-          className={`text-lg font-bold mb-1 ${
+          className={`text-lg font-bold mb-px ${
             prop.type === "error" ? "text-red-500" : "text-emerald-400"
           }`}
         >

@@ -1,4 +1,3 @@
-import { appPages } from "../extension/popup/pages";
 import logo from "../assets/articulate.png";
 import { MoonStar, Sun } from "lucide-react";
 
