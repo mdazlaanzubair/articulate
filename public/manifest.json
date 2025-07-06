@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Chrome extension Boilerplate",
+    "name": "Articulate",
     "version": "1.0.0",
-    "description": "Chrome extension React and Vite Boilerplate",
+    "description": "An AI assistant that helps in articulating thoughts and ideas in a a structured and professional language without hassle.",
     "action": {
         "default_popup": "index.html",
         "default_icon": {
