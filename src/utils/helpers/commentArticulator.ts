@@ -54,8 +54,6 @@ export const articulateComment = (
 
   // 4. Pushing the generated comment back to the comment-box
   if (qlEditor) {
-    qlEditor.innerHTML = `<p>${JSON.stringify(
-      isError ? error_msg : prompt
-    )}</p>`;
+    qlEditor.innerHTML = `<p>${isError ? error_msg : prompt}</p>`;
   }
 };

@@ -2,14 +2,19 @@ import { useEffect, useState } from "react";
 import Alert from "../../components/Alert";
 import type { AlertInterface, FormInterface } from "../../../../utils/types";
 import { gemini_models_list, openai_models_list } from "./components/constants";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import {
   getStoredData,
   setStoredData,
 } from "../../../../utils/helpers/storageAPI";
+import {
+  testGeminiKeyAndModel,
+  testOpenAIKeyAndModel,
+} from "../../../../utils/helpers/aiCommunicationAPI";
 
 const SetupPage = () => {
   const [show, setShow] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [alert, setAlert] = useState<AlertInterface | null>();
   const [formData, setFormData] = useState<FormInterface>({
     provider: "",
@@ -32,38 +37,55 @@ const SetupPage = () => {
   // function to submit form
   const submitHandler = async (e: any) => {
     e.preventDefault();
-
-    // validating form
-    const error = validateFormData(formData);
-    if (error) {
-      setAlert(error);
-      // scroll for element having id="alert"
-      const alertBox = document.getElementById("alert");
-      if (alertBox) alertBox.scrollIntoView({ behavior: "smooth" });
-      return;
-    }
-
-    // resetting errors state
+    setIsLoading(true);
     setAlert(null);
 
-    // saving in the local storage
-    const success = await setStoredData("user_config", formData);
+    try {
+      // validating form
+      const error = await validateFormData(formData);
+      if (error) {
+        setAlert(error);
+        // scroll for element having id="alert"
+        const alertBox = document.getElementById("alert");
+        if (alertBox) alertBox.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
 
-    // showing success
-    if (success) {
+      // resetting errors state
+      setAlert(null);
+
+      // saving in the local storage
+      const success = await setStoredData("user_config", formData);
+
+      // showing success
+      if (success) {
+        setAlert({
+          type: "success",
+          title: "Configuration Successful!",
+          message: "Your configuration has been saved successfully.",
+          show: true,
+        });
+
+        setTimeout(() => setAlert(null), 5000);
+      }
+    } catch (error) {
       setAlert({
-        type: "success",
-        title: "Configuration Successful!",
-        message: "Your configuration has been saved successfully.",
+        type: "error",
+        title: "Error!",
+        message: "Something went wrong. Please try again later.",
         show: true,
       });
-
-      setTimeout(() => setAlert(null), 5000);
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Function to validate form data
-  const validateFormData = (data: FormInterface): AlertInterface | null => {
+  const validateFormData = async (
+    data: FormInterface
+  ): Promise<AlertInterface | null> => {
+    // Validate if the provider is selected
     if (data.provider.length <= 0) {
       return {
         type: "error",
@@ -73,6 +95,7 @@ const SetupPage = () => {
       };
     }
 
+    // Validate if the provider is one of those which are in the select-box
     if (data.provider !== "openai" && data.provider !== "gemini") {
       return {
         type: "error",
@@ -82,6 +105,7 @@ const SetupPage = () => {
       };
     }
 
+    // Validate if API Key is present
     if (data.api_key.length <= 0) {
       return {
         type: "error",
@@ -98,6 +122,39 @@ const SetupPage = () => {
         message: "Please select a model.",
         show: true,
       };
+    }
+
+    // Validate if the API key is valid
+    if (data.api_key && data.provider && data.model) {
+      if (data.provider === "openai") {
+        try {
+          await testOpenAIKeyAndModel(data.api_key, data.model);
+        } catch (e: any) {
+          console.error("OpenAI validation failed:", e);
+          return {
+            type: "error",
+            title: "Validation Error!",
+            message: e.message.includes("Model")
+              ? `Invalid OpenAI model: ${data.model}`
+              : "Please enter a valid OpenAI API key.",
+            show: true,
+          };
+        }
+      } else {
+        try {
+          await testGeminiKeyAndModel(data.api_key, data.model);
+        } catch (e: any) {
+          console.error("Gemini validation failed:", e);
+          return {
+            type: "error",
+            title: "Validation Error!",
+            message: e.message.includes("Model")
+              ? `Invalid Gemini model: ${data.model}`
+              : "Please enter a valid Gemini API key.",
+            show: true,
+          };
+        }
+      }
     }
 
     return null;
@@ -196,8 +253,19 @@ const SetupPage = () => {
           </select>
         </fieldset>
 
-        <button type="submit" className="btn btn-primary btn-sm w-full mt-4">
-          Save
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="relative btn btn-primary btn-sm w-full mt-4 rounded overflow-hidden"
+        >
+          {isLoading ? (
+            <>
+              <LoaderCircle className="absolute top-1/2 left-3 -translate-y-1/2 animate-spin w-4 mr-2" />
+              Loading...
+            </>
+          ) : (
+            "Save"
+          )}
         </button>
       </form>
     </section>

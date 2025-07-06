@@ -48,3 +48,10 @@ export type ToneType =
   | "funny"
   | "friendly"
   | "proofread";
+
+// Interface for AI functions params
+export interface AIParamsInterface {
+  model: string;
+  apiKey: string;
+  prompt: string;
+}
