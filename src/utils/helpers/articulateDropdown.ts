@@ -88,16 +88,21 @@ export const dropdownCSS = `
 }
 
 /* Apply it as a reusable class */
-.ARTICULATE-dropdown-menu-item svg.ARTICULATE-spin {
-  animation: spin 1s linear infinite;
+.ARTICULATE-spin {
+  color: #333333;
+  animation: ARTICULATE-spin 1s linear infinite;
 }
 
 /* Define the spin animation */
-@keyframes spin {
+@keyframes ARTICULATE-spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
 }
+
   `;
 
 // Currently supported tones
@@ -178,19 +183,11 @@ export function getArticulateDropdown(commentBox: Element): HTMLElement {
 
         // changing btn UI
         toggle.disabled = true;
-        const loaderSVG = toggle.querySelector("svg");
-        if (loaderSVG) {
-          loaderSVG.style.color = "#333333"; // or use: loaderSVG.setAttribute("stroke", "#333333");
-        }
         toggle.innerHTML = toggleLoaderIcon;
 
         await articulateComment(commentBox, tone.slug as ToneType);
       } finally {
         isLoading = false;
-        const iconSVG = toggle.querySelector("svg");
-        if (iconSVG) {
-          iconSVG.style.color = "#1890ff"; // or: iconSVG.setAttribute("stroke", "#1890ff");
-        }
         toggle.disabled = false;
         toggle.innerHTML = toggleNormalIcon;
       }
