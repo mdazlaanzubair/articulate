@@ -1,19 +1,4 @@
-import { useEffect, useState } from "react";
-import { getStoredData } from "../../../../utils/helpers/storageAPI";
-import type { FormInterface } from "../../../../utils/types";
-import ConfigAlertMsg from "./components/ConfigAlertMsg";
-
 const HomePage = () => {
-  const [isConfig, setIsConfig] = useState<boolean>(false);
-
-  // Performing side-effect on component mount and get data from local storage (if exist)
-  useEffect(() => {
-    (async () => {
-      const storedData = await getStoredData<FormInterface>("user_config");
-      if (!storedData || !storedData?.api_key?.length) setIsConfig(true);
-    })();
-  }, []);
-
   // Function to redirect url on linkedin page
   const handleGetStartedClick = async () => {
     const linkedInUrl = "https://www.linkedin.com/feed/";
@@ -31,29 +16,21 @@ const HomePage = () => {
   };
 
   return (
-    <section className="w-full h-full flex flex-col items-center justify-center gap-3 overflow-x-hidden overflow-y-auto p-5">
-      {isConfig ? (
-        <>
-          <ConfigAlertMsg
-            type="success"
-            title="Welcome to Articulate!"
-            message="Use AI to articulate your thoughts into structured language."
-          />
-          <button
-            type="button"
-            className="btn btn-sm w-full bg-blue-600 hover:bg-blue-700 text-slate-50 hover:text-white rounded"
-            onClick={handleGetStartedClick}
-          >
-            Lets Articulate
-          </button>
-        </>
-      ) : (
-        <ConfigAlertMsg
-          type="error"
-          title="Configuration Error!"
-          message="Your AI has not been configuration, kindly configure it to continue."
-        />
-      )}
+    <section className="w-full h-full flex flex-col gap-8 overflow-x-hidden overflow-y-auto p-5">
+      <div>
+        <h1 className="text-xl font-bold mb-1">Welcome to Articulate!</h1>
+        <p className="text-xs mb-3">
+          Use AI to articulate your thoughts into structured language.
+          Articulate
+        </p>
+        <button
+          type="button"
+          className="btn btn-sm w-full bg-blue-600 hover:bg-blue-700 text-slate-50 hover:text-white rounded"
+          onClick={handleGetStartedClick}
+        >
+          Let&apos;s Articulate
+        </button>
+      </div>
 
       <div className="flex flex-col gap-3">
         <h1 className="text-base font-semibold">How to use articulate</h1>

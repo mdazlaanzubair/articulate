@@ -1,4 +1,4 @@
-import { getArticulateDropdown } from "./articulateDropdown";
+import { dropdownCSS, getArticulateDropdown } from "./articulateDropdown";
 
 // list of target of DOM elements
 /**
@@ -25,6 +25,21 @@ export const SELECT_TARGET = {
   inject: ".comments-comment-box__detour-container",
 };
 
+export function injectAndObserve() {
+  // Injecting styles for articulate dropdown
+  const style = document.createElement("style");
+  style.textContent = dropdownCSS;
+  document.head.appendChild(style);
+
+  // Initializing Observer
+  const feedContainer = document.querySelector(SELECT_TARGET.feeds);
+  if (!feedContainer || !(feedContainer instanceof HTMLElement)) {
+    console.log("No Feed Found");
+  } else {
+    setupMutationObserver(feedContainer);
+  }
+}
+
 // Function to start observer to catch DOM changes
 export const setupMutationObserver = (targetElement: Element) => {
   // Options for the observer (which mutations to observe)
@@ -34,7 +49,7 @@ export const setupMutationObserver = (targetElement: Element) => {
   const mutationCallback = (mutationList: MutationRecord[]) => {
     for (const mutation of mutationList) {
       if (mutation.type === "childList") {
-        mutation.addedNodes.forEach((node) => {
+        mutation.addedNodes.forEach(async (node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             getCommentForm(node as Element);
           }
@@ -66,8 +81,8 @@ const getCommentForm = (node: Element) => {
       commentBox.setAttribute("data-articulate-injected", "true");
 
       // Applying style for visibility in UI
-      commentBox.style.borderRadius = "6px";
-      commentBox.style.border = "4px solid red";
+      // commentBox.style.borderRadius = "6px";
+      // commentBox.style.border = "4px solid red";
 
       // Injecting the button into action items row
       const actionBtnRow = commentBox.querySelector(SELECT_TARGET.inject);
@@ -124,8 +139,8 @@ export const getPostContent = (feedItem: Element): string | null | void => {
   }
 
   // Applying style for visibility in UI
-  postContainer.style.borderRadius = "6px";
-  postContainer.style.border = "4px solid red";
+  // postContainer.style.borderRadius = "6px";
+  // postContainer.style.border = "4px solid red";
 
   // Explicitly handle the case where textContent might be null
   const textContent = postContainer.textContent;
@@ -143,8 +158,8 @@ export const getAuthorName = (feedItem: Element): string | null | void => {
   }
 
   // Applying style for visibility in UI
-  authorContainer.style.borderRadius = "6px";
-  authorContainer.style.border = "4px solid red";
+  // authorContainer.style.borderRadius = "6px";
+  // authorContainer.style.border = "4px solid red";
 
   // Explicitly handle the case where textContent might be null
   const textContent = authorContainer.textContent;

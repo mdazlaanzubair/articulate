@@ -14,8 +14,7 @@
     "content_scripts": [
         {
             "matches": [
-                "https://www.linkedin.com/feed/*",
-                "https://www.linkedin.com/posts/*"
+                "https://www.linkedin.com/feed/*"
             ],
             "js": [
                 "content-script.js"
@@ -23,7 +22,7 @@
         }
     ],
     "background": {
-        "service_worker": "./background.js",
+        "service_worker": "background.js",
         "type": "module"
     },
     "permissions": [
@@ -31,6 +30,9 @@
         "activeTab",
         "scripting",
         "tabs"
+    ],
+    "host_permissions": [
+        "https://www.linkedin.com/*"
     ],
     "icons": {
         "16": "icons/icon16.png",

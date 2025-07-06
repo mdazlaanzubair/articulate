@@ -1,4 +1,9 @@
+import { USER_CONFIG } from "../../extension/content-script";
 import type { PostContextInterface, ToneType } from "../types";
+import {
+  generateGeminiComment,
+  generateOpenAIComment,
+} from "./aiCommunicationAPI";
 import { generateDynamicPrompt } from "./dynamicPrompGenerator";
 import {
   getAuthorName,
@@ -8,10 +13,10 @@ import {
 } from "./selectorAPI";
 
 // Event listener function to be attached with the articulate injectable button
-export const articulateComment = (
+export const articulateComment = async (
   commentBox: Element,
-  tone: ToneType = "professional"
-): void => {
+  tone: ToneType
+): Promise<void> => {
   // Object to contain all context required for comment generation
   const postContext: PostContextInterface = {
     tone,
@@ -47,13 +52,59 @@ export const articulateComment = (
 
   // 3. Generate Prompt from the post context
   const { isError, error_msg, prompt } = generateDynamicPrompt(postContext);
-  console.log("<==============>");
-  console.log(" DYNAMIC PROMPT");
-  console.log("<==============>");
-  console.log(isError ? error_msg : prompt);
 
-  // 4. Pushing the generated comment back to the comment-box
+  // 4. Making API call to generate comment
+  let finalizedComment = "";
+  let secondsElapsed = 0; // Counter for seconds elapsed
+  let timerInterval; // To store the interval ID
+
+  if (isError) {
+    finalizedComment = `${error_msg}`;
+  } else {
+    try {
+      // Start the timer
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        if (qlEditor) {
+          qlEditor.innerHTML = `<p>Preparing comment... (${secondsElapsed}s)</p>`;
+        }
+      }, 1000);
+
+      const aiComment = await generateAiComment(prompt as string);
+      finalizedComment = `${aiComment}`;
+    } finally {
+      // Clear the interval when the response is received
+      clearInterval(timerInterval);
+    }
+  }
+
+  // 5. Pushing the generated comment back to the comment-box
   if (qlEditor) {
-    qlEditor.innerHTML = `<p>${isError ? error_msg : prompt}</p>`;
+    qlEditor.innerHTML = `<p>${finalizedComment}</p>`;
+  }
+};
+
+// Function to perform AI calls to AI agent based on the provider selected
+const generateAiComment = async (prompt: string): Promise<string> => {
+  try {
+    if (!USER_CONFIG) throw new Error("AI Configs are missing, please setup!");
+
+    const reqParams = {
+      apiKey: USER_CONFIG.api_key,
+      model: USER_CONFIG.model,
+      prompt,
+    };
+
+    let aiGeneratedComment = "";
+    if (USER_CONFIG.provider === "openai") {
+      aiGeneratedComment = await generateOpenAIComment(reqParams);
+    } else {
+      aiGeneratedComment = await generateGeminiComment(reqParams);
+    }
+
+    return aiGeneratedComment;
+  } catch (error) {
+    console.error(error);
+    return "Something went wrong while communicating with AI Agent.";
   }
 };

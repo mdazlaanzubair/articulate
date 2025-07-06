@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Alert from "../../components/Alert";
+import Alert from "./components/Alert";
 import type { AlertInterface, FormInterface } from "../../../../utils/types";
 import { gemini_models_list, openai_models_list } from "./components/constants";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
@@ -10,7 +10,7 @@ import {
 import {
   testGeminiKeyAndModel,
   testOpenAIKeyAndModel,
-} from "../../../../utils/helpers/aiCommunicationAPI";
+} from "../../../../utils/helpers/aiAPIKeyValidator";
 
 const SetupPage = () => {
   const [show, setShow] = useState<boolean>(false);

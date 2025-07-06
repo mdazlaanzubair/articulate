@@ -22,6 +22,12 @@ export interface FormInterface {
   model: string;
 }
 
+export interface UserConfigInterface {
+  provider: string;
+  api_key: string;
+  model: string;
+}
+
 // Interface for post context object
 export interface PostContextInterface {
   tone: ToneType;
@@ -41,6 +47,13 @@ export interface DynamicPromptInterface extends PostContentValidation {
   prompt: string | null;
 }
 
+// Interface for AI functions params
+export interface AIParamsInterface {
+  model: string;
+  apiKey: string;
+  prompt: string;
+}
+
 // Type face for tones
 export type ToneType =
   | "professional"
@@ -48,10 +61,3 @@ export type ToneType =
   | "funny"
   | "friendly"
   | "proofread";
-
-// Interface for AI functions params
-export interface AIParamsInterface {
-  model: string;
-  apiKey: string;
-  prompt: string;
-}
