@@ -6,6 +6,10 @@ export async function generateGeminiComment(
 ): Promise<string> {
   const { prompt, api_key, model } = params || {};
 
+  if (!prompt) throw new Error("Missing prompt.");
+  if (!api_key) throw new Error("Missing API key.");
+  if (!model) throw new Error("Missing model.");
+
   const url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent`;
 
   try {
@@ -27,6 +31,10 @@ export async function generateGeminiComment(
         ],
       }),
     });
+
+    if (response.status === 429) {
+      return "Rate limit exceeded. Please try again later.";
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
