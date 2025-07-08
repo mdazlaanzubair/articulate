@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Articulate - LinkedIn Comment Enhancer",
     "version": "1.0.0",
-    "description": "Enhance your LinkedIn comments with AI-powered tone adjustment and writing assistance. Make your professional communication more effective.",
+    "description": "AI-powered tone adjustment and writing assistance for LinkedIn comments.",
     "author": "Muhammad Azlaan Zubair",
     "homepage_url": "https://mdazlaanzubair.com/",
     "icons": {
