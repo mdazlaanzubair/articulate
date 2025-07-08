@@ -1,4 +1,4 @@
-import type { PageInterface } from "../../../utils/types";
+import type { PageInterface } from "../../utils/types";
 import GuidePage from "./guide";
 import HomePage from "./home";
 import SetupPage from "./setup";

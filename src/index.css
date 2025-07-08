@@ -18,3 +18,9 @@ body {
   background-color: transparent;
   margin: 0 auto;
 }
+
+.pacifico-regular {
+  font-family: "Pacifico", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}

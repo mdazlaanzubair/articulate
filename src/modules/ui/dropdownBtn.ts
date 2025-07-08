@@ -1,7 +1,7 @@
-import type { ToneType } from "../types";
-import { articulateComment } from "./commentArticulator";
+import type { ToneOption } from "../../utils/types";
+import { articulateAIComment } from "../comment-generator";
 
-// Styles for dropdown that would be injected in the head of the webpage when `content-script.ts` loads
+// Styles for dropdown that would be injected in the head of the webpage
 export const dropdownCSS = `
 .ARTICULATE-dropdown {
   position: relative;
@@ -21,15 +21,18 @@ export const dropdownCSS = `
   justify-content: center;
   transition: background 0.2s ease;
 }
+
 .ARTICULATE-dropdown-trigger:hover {
   background: rgba(24, 144, 255, 0.1);
 }
+
 .ARTICULATE-dropdown-trigger svg {
   width: 2.1rem;
   height: 2.1rem;
   color: #1890ff;
   transition: transform 0.2s ease;
 }
+
 .ARTICULATE-dropdown-trigger:focus svg,
 .ARTICULATE-dropdown-trigger:hover svg {
   color: #1890ff;
@@ -53,6 +56,7 @@ export const dropdownCSS = `
   transition: transform 0.2s ease, opacity 0.2s ease;
   z-index: 10000;
 }
+
 .ARTICULATE-dropdown-menu-show {
   opacity: 1;
   transform: scaleY(1);
@@ -67,22 +71,27 @@ export const dropdownCSS = `
   cursor: pointer;
   transition: background 0.2s ease;
 }
+
 .ARTICULATE-dropdown-menu-item:hover {
   background: rgba(24, 144, 255, 0.1);
 }
+
 .ARTICULATE-dropdown-menu-item svg {
   width: 16px;
   height: 16px;
   color: #333333;
 }
+
 .ARTICULATE-dropdown-menu-item span {
   font-size: 14px;
   color: #333333;
   white-space: nowrap;
 }
+
 .ARTICULATE-dropdown-menu-item:hover svg {
   color: #1890ff;
 }
+
 .ARTICULATE-dropdown-menu-item:hover span {
   color: #1890ff;
 }
@@ -102,11 +111,10 @@ export const dropdownCSS = `
     transform: rotate(360deg);
   }
 }
-
-  `;
+`;
 
 // Currently supported tones
-const options = [
+const options: ToneOption[] = [
   {
     title: "Professional Tone",
     slug: "professional",
@@ -134,84 +142,101 @@ const options = [
   },
 ];
 
-// Function to create a tone options dropdown to give user variety to articulate their comments
-export function getArticulateDropdown(commentBox: Element): HTMLElement {
+// Function to creates a dropdown menu for selecting comment tones
+export function createArticulateDropdown(commentBox: Element): HTMLElement {
   const cssClassPrefix = "ARTICULATE-";
-
-  // Dropdown open/close and loading statuses
   let isOpen = false;
   let isLoading = false;
 
-  // 1) Root wrapper: replicates your <div class="dropdown">
+  // Create the root wrapper element
   const wrapper = document.createElement("div");
-  wrapper.className = cssClassPrefix + "dropdown";
+  wrapper.className = `${cssClassPrefix}dropdown`;
+  wrapper.setAttribute("role", "menu");
 
-  // 3) The toggle button (lightbulb)
+  // Create the toggle button
   const toggle = document.createElement("button");
   toggle.setAttribute("type", "button");
   toggle.setAttribute("role", "button");
   toggle.setAttribute("title", "Articulate");
-  toggle.className = cssClassPrefix + "dropdown-trigger";
+  toggle.setAttribute("aria-haspopup", "true");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.className = `${cssClassPrefix}dropdown-trigger`;
 
   const toggleNormalIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb-icon lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`;
   const toggleLoaderIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ARTICULATE-spin lucide lucide-loader-circle-icon lucide-loader-circle"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
 
-  // Injecting icon to the button
   toggle.innerHTML = toggleNormalIcon;
-
-  // Appending it in the wrapper
   wrapper.appendChild(toggle);
 
-  // 4) The dropdown menu
+  // Create the dropdown menu
   const menu = document.createElement("div");
-  menu.className = cssClassPrefix + "dropdown-menu";
+  menu.className = `${cssClassPrefix}dropdown-menu`;
+  menu.setAttribute("role", "menu");
+  menu.setAttribute("aria-hidden", "true");
 
-  // 5) Populate menu items
+  // Populate the dropdown menu with tone options
   options.forEach((tone) => {
-    const menu_item = document.createElement("div");
-    menu_item.className = cssClassPrefix + "dropdown-menu-item";
-    menu_item.innerHTML = tone.svg + `<span>${tone.title}</span>`;
+    const menuItem = document.createElement("div");
+    menuItem.className = `${cssClassPrefix}dropdown-menu-item`;
+    menuItem.setAttribute("role", "menuitem");
+    menuItem.tabIndex = 0;
+    menuItem.innerHTML = `${tone.svg}<span>${tone.title}</span>`;
 
-    // attaching function to generate comment
-    menu_item.addEventListener("click", async () => {
+    menuItem.addEventListener("click", async () => {
       try {
         isLoading = true;
-
-        // closing dropdown
-        isOpen = !isOpen;
-        menu.classList.toggle("ARTICULATE-dropdown-menu-show", isOpen);
-
-        // changing btn UI
+        isOpen = false;
+        menu.classList.remove(`${cssClassPrefix}dropdown-menu-show`);
+        toggle.setAttribute("aria-expanded", "false");
+        menu.setAttribute("aria-hidden", "true");
         toggle.disabled = true;
         toggle.innerHTML = toggleLoaderIcon;
 
-        await articulateComment(commentBox, tone.slug as ToneType);
+        await articulateAIComment(commentBox, tone.slug);
+      } catch (error) {
+        console.error("Error articulating comment:", error);
       } finally {
         isLoading = false;
         toggle.disabled = false;
         toggle.innerHTML = toggleNormalIcon;
       }
     });
-    menu.appendChild(menu_item);
+
+    menu.appendChild(menuItem);
   });
 
   wrapper.appendChild(menu);
 
-  // 6) Attaching event to toggle dropdown
+  // Toggle dropdown menu visibility
   toggle.addEventListener("click", (event) => {
-    if (isLoading) return; // block while loading
-    event.stopPropagation(); // Prevent bubbling to document
+    if (isLoading) return;
+    event.stopPropagation();
     isOpen = !isOpen;
-    menu.classList.toggle("ARTICULATE-dropdown-menu-show", isOpen);
+    menu.classList.toggle(`${cssClassPrefix}dropdown-menu-show`, isOpen);
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    menu.setAttribute("aria-hidden", String(!isOpen));
   });
 
-  // Event attaching to see if the click happened in the
-  // document close thr dropdown if its already opened
+  // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
     if (isOpen && !wrapper.contains(e.target as Node)) {
       isOpen = false;
       menu.classList.remove(`${cssClassPrefix}dropdown-menu-show`);
+      toggle.setAttribute("aria-expanded", "false");
+      menu.setAttribute("aria-hidden", "true");
     }
   });
+
+  // Add keyboard navigation for accessibility
+  menu.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      isOpen = false;
+      menu.classList.remove(`${cssClassPrefix}dropdown-menu-show`);
+      toggle.setAttribute("aria-expanded", "false");
+      menu.setAttribute("aria-hidden", "true");
+      toggle.focus();
+    }
+  });
+
   return wrapper;
 }

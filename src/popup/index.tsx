@@ -3,7 +3,7 @@ import { Header } from "./components/Header";
 import Footer from "./components/Footer";
 import { appPages } from "./pages";
 import { FileWarning, House, Text, Webhook } from "lucide-react";
-import { getStoredData } from "../../utils/helpers/storageAPI";
+import { getStoredData } from "../utils/helpers/storageAPI";
 import PopupAlert from "./components/PopupAlert";
 
 const ExtensionPopup = () => {

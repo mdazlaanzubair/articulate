@@ -2,7 +2,7 @@ import type {
   DynamicPromptInterface,
   PostContentValidation,
   PostContextInterface,
-} from "../types";
+} from "../../utils/types";
 
 const COMMENT_TONES = {
   professional: `Rewrite or generate the comment in a **Professional Tone**. The language should be formal, respectful, 
