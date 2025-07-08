@@ -7,14 +7,16 @@ import { dropdownCSS } from "../ui/dropdownBtn";
  */
 export function injectAndObserve(): void {
   injectStyles();
-  const feedContainer = document.querySelector<HTMLElement>(
-    SELECT_TARGET.feeds
-  );
+  const feedContainer = document.querySelector<HTMLElement>(SELECT_TARGET.main);
 
   if (!feedContainer) {
     console.warn("No feed container found.");
     return;
   }
+
+  // inject into already existing comment fields in the dom
+  const feedItems = document.querySelectorAll(SELECT_TARGET.feed_item);
+  feedItems.forEach((feedItem) => getCommentForm(feedItem));
 
   setupMutationObserver(feedContainer);
 }

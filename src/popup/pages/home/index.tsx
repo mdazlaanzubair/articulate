@@ -37,7 +37,7 @@ const HomePage = () => {
         <div className="aspect-video w-full rounded-lg overflow-hidden shadow">
           <iframe
             className="w-full h-full"
-            src="https://www.youtube.com/embed/OB99E7Y1cMA?si=qQrwSIWCFVicK0-c"
+            src="https://www.youtube.com/embed/OB99"
             title="How to use articulate?"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture;"

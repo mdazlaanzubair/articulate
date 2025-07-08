@@ -11,6 +11,7 @@
  * @key inject - Contains the selector for linkedin comment-box where `Articulate` button will be injected.
  */
 export const SELECT_TARGET = {
+  main: "main",
   feeds:
     'div.scaffold-finite-scroll__content[data-finite-scroll-hotkey-context="FEED"]',
   feed_item:
