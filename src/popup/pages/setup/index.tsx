@@ -1,21 +1,26 @@
 import { useEffect, useState } from "react";
 import Alert from "./components/Alert";
-import type { AlertInterface, FormInterface } from "../../../utils/types";
-import { gemini_models_list, openai_models_list } from "./components/constants";
+import type {
+  AIModelInterface,
+  AlertInterface,
+  FormInterface,
+} from "../../../utils/types";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import {
   getStoredData,
   setStoredData,
 } from "../../../utils/helpers/storageAPI";
 import {
-  testGeminiKeyAndModel,
-  testOpenAIKeyAndModel,
+  validateAPIKeyAndFetchModelsOpenAI,
+  validateAPIKeyAndFetchModelsGemini,
 } from "../../../utils/helpers/aiAPIKeyValidator";
 
 const SetupPage = () => {
   const [show, setShow] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
   const [alert, setAlert] = useState<AlertInterface | null>();
+  const [AIModelsList, setAIModelsList] = useState<AIModelInterface[]>([]);
   const [formData, setFormData] = useState<FormInterface>({
     provider: "",
     model: "",
@@ -33,6 +38,65 @@ const SetupPage = () => {
       console.log(userConfig);
     })();
   }, []);
+
+  // Performing side effect on form field change and fetch models accordingly
+  useEffect(() => {
+    const validateAPIKey = async () => {
+      // return if input is empty
+      if (formData.api_key.length <= 0) return;
+
+      if (formData.provider === "openai") {
+        try {
+          setIsLoadingModels(true);
+          setAlert(null);
+
+          const modelsList = await validateAPIKeyAndFetchModelsOpenAI(
+            formData.api_key
+          );
+          setAIModelsList(modelsList);
+        } catch (e: any) {
+          console.error("OpenAI validation failed:", e);
+          setAlert({
+            type: "error",
+            title: "Validation Error!",
+            message: "Please enter a valid OpenAI API key.",
+            show: true,
+          });
+        } finally {
+          setIsLoadingModels(false);
+        }
+      } else if (formData.provider === "gemini") {
+        try {
+          setIsLoadingModels(true);
+          setAlert(null);
+
+          const modelsList = await validateAPIKeyAndFetchModelsGemini(
+            formData.api_key
+          );
+          setAIModelsList(modelsList);
+        } catch (e: any) {
+          console.error("Gemini validation failed:", e);
+          setAlert({
+            type: "error",
+            title: "Validation Error!",
+            message: "Please enter a valid Gemini API key.",
+            show: true,
+          });
+        } finally {
+          setIsLoadingModels(false);
+        }
+      } else {
+        setAlert({
+          type: "error",
+          title: "Invalid Provider!",
+          message: "Please select a valid provider.",
+          show: true,
+        });
+      }
+    };
+
+    validateAPIKey();
+  }, [formData.api_key, formData.provider]);
 
   // function to submit form
   const submitHandler = async (e: any) => {
@@ -115,46 +179,13 @@ const SetupPage = () => {
       };
     }
 
-    if (data.model.length <= 0) {
+    if (AIModelsList.length > 0 && data.model.length <= 0) {
       return {
         type: "error",
         title: "Model Not Selected!",
         message: "Please select a model.",
         show: true,
       };
-    }
-
-    // Validate if the API key is valid
-    if (data.api_key && data.provider && data.model) {
-      if (data.provider === "openai") {
-        try {
-          await testOpenAIKeyAndModel(data.api_key, data.model);
-        } catch (e: any) {
-          console.error("OpenAI validation failed:", e);
-          return {
-            type: "error",
-            title: "Validation Error!",
-            message: e.message.includes("Model")
-              ? `Invalid OpenAI model: ${data.model}`
-              : "Please enter a valid OpenAI API key.",
-            show: true,
-          };
-        }
-      } else {
-        try {
-          await testGeminiKeyAndModel(data.api_key, data.model);
-        } catch (e: any) {
-          console.error("Gemini validation failed:", e);
-          return {
-            type: "error",
-            title: "Validation Error!",
-            message: e.message.includes("Model")
-              ? `Invalid Gemini model: ${data.model}`
-              : "Please enter a valid Gemini API key.",
-            show: true,
-          };
-        }
-      }
     }
 
     return null;
@@ -184,11 +215,12 @@ const SetupPage = () => {
           <legend className="fieldset-legend">Choose AI Provider</legend>
           <select
             className="select select-sm focus:outline-0"
+            disabled={isLoading || isLoadingModels}
             defaultValue={"Pick a provider"}
             value={formData.provider && formData.provider}
-            onChange={(e) =>
-              setFormData({ ...formData, provider: e.target.value })
-            }
+            onChange={(e) => {
+              setFormData({ ...formData, provider: e.target.value });
+            }}
           >
             <option value="none">Pick a provider </option>
             <option value="gemini">Google</option>
@@ -201,9 +233,10 @@ const SetupPage = () => {
           <legend className="fieldset-legend">API Key</legend>
           <div className="flex items-center justify-between gap-2">
             <input
+              disabled={isLoading || isLoadingModels}
               type={show ? "text" : "password"}
-              value={formData?.api_key ? formData?.api_key : ""}
-              onChange={(e) =>
+              defaultValue={formData?.api_key ? formData?.api_key : ""}
+              onBlur={(e) =>
                 setFormData({ ...formData, api_key: e.target.value })
               }
               className="input input-sm focus:outline-0"
@@ -232,20 +265,14 @@ const SetupPage = () => {
             defaultValue="Pick an AI Model"
             value={formData.model && formData.model}
             className="select select-sm focus:outline-0"
-            disabled={formData?.provider?.length <= 0}
+            disabled={AIModelsList.length <= 0 || isLoading || isLoadingModels}
             onChange={(e) =>
               setFormData({ ...formData, model: e.target.value })
             }
           >
             <option value="none">Pick an AI Model </option>
-            {formData?.provider === "openai" &&
-              openai_models_list.map((model) => (
-                <option key={model.slug} value={model.slug}>
-                  {model.title}
-                </option>
-              ))}
-            {formData?.provider === "gemini" &&
-              gemini_models_list.map((model) => (
+            {AIModelsList.length > 0 &&
+              AIModelsList.map((model) => (
                 <option key={model.slug} value={model.slug}>
                   {model.title}
                 </option>
@@ -255,13 +282,18 @@ const SetupPage = () => {
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isLoadingModels || AIModelsList.length <= 0}
           className="relative btn btn-primary btn-sm w-full mt-4 rounded overflow-hidden"
         >
           {isLoading ? (
             <>
               <LoaderCircle className="absolute top-1/2 left-3 -translate-y-1/2 animate-spin w-4 mr-2" />
               Loading...
+            </>
+          ) : isLoadingModels ? (
+            <>
+              <LoaderCircle className="absolute top-1/2 left-3 -translate-y-1/2 animate-spin w-4 mr-2" />
+              Fetching available models...
             </>
           ) : (
             "Save"

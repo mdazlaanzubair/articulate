@@ -6,7 +6,7 @@ export async function generateGeminiComment(
 ): Promise<string> {
   const { prompt, api_key, model } = params || {};
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent`;
 
   try {
     const response = await fetch(url, {

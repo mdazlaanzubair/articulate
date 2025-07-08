@@ -65,6 +65,12 @@ export interface ToneOption {
   svg: string;
 }
 
+// Interface for AI models list
+export interface AIModelInterface {
+  title: string;
+  slug: string;
+}
+
 // Type face for tones
 export type ToneType =
   | "professional"
