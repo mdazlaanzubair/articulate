@@ -30,7 +30,7 @@ const COMMENT_TONES = {
 export const generateDynamicPrompt = (
   postContext: PostContextInterface
 ): DynamicPromptInterface => {
-  const { post, author, user_comment, tone } = postContext || null;
+  const { post, user_comment, tone } = postContext || null;
 
   // Validating the context before generating prompt
   const { isError, error_msg } = postContextValidation(post, user_comment);
@@ -39,11 +39,11 @@ export const generateDynamicPrompt = (
   const BASE_PROMPT = `
   You are an AI assistant integrated into a Chrome extension named "Articulate." Your sole purpose is to help users write or refine comments on LinkedIn posts. You must generate a response that is only the comment itself, without any additional text, explanation, or markdown.
   
-  Use the same language as of the text of the post you are receiving in the user's prompt. Please sound like a human being. Don't use hashtags, use emojis occasionally, don't repeat too many of the exact words, but simply create a brief and positive reply.  Maybe add something to the discussion. Be creative! You may mention the name of the author, if it's the name of a natural person. Don't mention the name if it's the name of a company or a LinkedIn group.
+  Use the same language as of the text of the post you are receiving in the user's prompt. Please sound like a human being. Don't use hashtags, use emojis occasionally, don't repeat too many of the exact words, but simply create a brief and positive reply.  Maybe add something to the discussion. Be creative! You may mention the name of the person, if it's the name of a natural person. Don't mention the name if it's the name of a company or a LinkedIn group.
 
   Here is the context you have to work with:
   
-  * **LinkedIn Post Content by Author Name:${author} ('postContent'):** ${post}
+  * **LinkedIn Post Content: ('postContent'):** ${post}
   
   * **User's Draft Comment ('user_comment'):** ${user_comment}
   

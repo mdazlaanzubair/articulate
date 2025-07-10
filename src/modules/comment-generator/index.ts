@@ -64,7 +64,9 @@ export const articulateAIComment = async (
       timerInterval = setInterval(() => {
         secondsElapsed++;
         if (qlEditor) {
-          qlEditor.innerHTML = `<p>Preparing comment... (${secondsElapsed}s)</p>`;
+          let loadingPlaceholder = `Preparing comment... (${secondsElapsed}s)`;
+          qlEditor.setAttribute("placeholder", loadingPlaceholder);
+          qlEditor.ariaPlaceholder = loadingPlaceholder;
         }
       }, 1000);
 
@@ -76,6 +78,10 @@ export const articulateAIComment = async (
     } finally {
       // Clear the interval when the response is received
       if (timerInterval) {
+        if (qlEditor) {
+          qlEditor.setAttribute("placeholder", "Add a comment…");
+          qlEditor.ariaPlaceholder = "Add a comment…";
+        }
         clearInterval(timerInterval);
       }
     }
