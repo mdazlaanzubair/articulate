@@ -1,146 +1,125 @@
-// Function to checks if an OpenAI API key is valid by making a lightweight test call.
-export async function testOpenAIKeyAndModel(
-  apiKey: string,
-  selectedModel: string
-): Promise<boolean> {
-  // 1️⃣ List models
-  let listRes: Response;
+import type { AIModelInterface } from "../types";
+
+// Function to validate the OpenAI API key and fetch available text models
+export async function validateAPIKeyAndFetchModelsOpenAI(
+  apiKey: string
+): Promise<AIModelInterface[]> {
+  let res: Response;
   try {
-    listRes = await fetch("https://api.openai.com/v1/models", {
+    res = await fetch("https://api.openai.com/v1/models", {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
   } catch (networkErr: any) {
-    throw new Error(`Network error listing models: ${networkErr.message}`);
+    throw new Error(`Network error: ${networkErr.message}`);
   }
 
-  if (listRes.status === 401) {
+  if (res.status === 401) {
     throw new Error("Invalid OpenAI API key");
   }
-  if (!listRes.ok) {
-    throw new Error(
-      `Failed to list models: ${listRes.status} ${listRes.statusText}`
-    );
+
+  if (!res.ok) {
+    throw new Error(`Failed to list models: ${res.status} ${res.statusText}`);
   }
 
-  const listJson = await listRes.json();
-  const availableModels: string[] = Array.isArray(listJson.data)
-    ? listJson.data.map((m: any) => m.id)
+  const listJson = await res.json();
+  const excludeKeywords = [
+    "audio",
+    "tts",
+    "whisper",
+    "dall-e",
+    "embedding",
+    "image",
+    "codex",
+    "moderation",
+    "search",
+    "transcribe",
+    "realtime",
+    "turbo",
+    "preview",
+    "chatgpt",
+    "0613",
+    "nano",
+  ];
+
+  const models: AIModelInterface[] = Array.isArray(listJson.data)
+    ? listJson.data
+        .map((m: any) => m.id)
+        .filter(
+          (id: string) =>
+            (id.startsWith("gpt-") || id.startsWith("o")) &&
+            !excludeKeywords.some((kw) => id.includes(kw))
+        )
+        .map((id: string) => ({
+          slug: id,
+          title: id.replace(/-/g, " ").toUpperCase(),
+        }))
     : [];
 
-  if (!availableModels.length) {
-    throw new Error("No models returned from OpenAI. Is your API key valid?");
+  if (!models.length) {
+    throw new Error("No valid text models found for this API key.");
   }
 
-  if (!availableModels.includes(selectedModel)) {
-    throw new Error(`Model "${selectedModel}" not found`);
-  }
-
-  // 2️⃣ Minimal chat completion to verify key/model
-  let chatRes: Response;
-  try {
-    chatRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [{ role: "user", content: "Hi" }],
-        max_tokens: 1,
-        temperature: 0.0,
-      }),
-    });
-  } catch (networkErr: any) {
-    throw new Error(
-      `Network error during test completion: ${networkErr.message}`
-    );
-  }
-
-  if (chatRes.status === 401) {
-    throw new Error("Invalid OpenAI API key");
-  }
-  if (!chatRes.ok) {
-    const errBody = await chatRes.json().catch(() => ({}));
-    throw new Error(
-      `Test completion failed: ${chatRes.status} ${chatRes.statusText}` +
-        (errBody.error?.message ? ` - ${errBody.error.message}` : "")
-    );
-  }
-
-  return true;
+  return models;
 }
 
-// Function to test Gemini API key and model availability using direct API calls
-export async function testGeminiKeyAndModel(
-  apiKey: string,
-  selectedModel: string
-): Promise<boolean> {
-  // 1. Query models endpoint
-  let listResp;
+// Validates Gemini API key and returns list of available text models
+interface GeminiModel {
+  slug: string;
+  title: string;
+}
+
+export async function validateAPIKeyAndFetchModelsGemini(
+  apiKey: string
+): Promise<GeminiModel[]> {
+  const EXCLUDED_KEYWORDS = [
+    "embedding",
+    "vision",
+    "tts",
+    "image",
+    "aqa",
+    "answer",
+    "gemma",
+    "preview",
+    "aqa",
+    "learn",
+    "8b",
+    "experimental",
+    "002",
+    "001",
+  ];
+
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
     const resp = await fetch(url);
-    if (resp.status === 401) throw new Error("Invalid API key");
-    listResp = await resp.json();
+    if (resp.status === 401) throw new Error("Invalid Gemini API key");
+
+    const listJson = await resp.json();
+    const models = Array.isArray(listJson.models) ? listJson.models : [];
+
+    const textModels = models
+      .filter((model: any) => {
+        const name = model.name.toLowerCase();
+        const displayName = model.displayName.toLowerCase();
+        const supportsText = (model.supportedGenerationMethods || []).includes(
+          "generateContent"
+        );
+
+        // Exclude if name contains any unwanted keywords
+        const text = `${displayName} ${name}`;
+        const isExcluded = EXCLUDED_KEYWORDS.some((kw) => text.includes(kw));
+        return supportsText && !isExcluded;
+      })
+      .map((model: any) => ({
+        slug: model.name,
+        title: model.displayName,
+      }));
+
+    if (!textModels.length) {
+      throw new Error("No suitable text models found for this API key.");
+    }
+
+    return textModels;
   } catch (err: any) {
-    throw new Error(`Gemini list-models failed: ${err.message || err}`);
-  }
-
-  if (!Array.isArray(listResp.models)) {
-    throw new Error("Gemini API: models array not found in response");
-  }
-
-  let isModelAvailable = false;
-  for (const model of listResp.models) {
-    const modelName: string = model.name;
-    if (modelName.includes(selectedModel)) {
-      isModelAvailable = true;
-      break;
-    }
-  }
-
-  if (!isModelAvailable) {
-    throw new Error(`Model "${selectedModel}" not found`);
-  }
-
-  // 2. Lightweight generate to verify key/model
-  const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent`;
-
-  try {
-    const response = await fetch(generateUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: "Hello",
-              },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data.candidates || !data.candidates[0].content.parts[0].text) {
-      throw new Error("Empty generate response");
-    }
-
-    return true;
-  } catch (err: any) {
-    if ((err.message || "").toLowerCase().includes("unauthorized")) {
-      throw new Error("Invalid API key");
-    }
-    throw new Error(`Gemini generate failed: ${err.message || err}`);
+    throw new Error(`Gemini API error: ${err.message || err}`);
   }
 }

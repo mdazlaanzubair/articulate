@@ -48,10 +48,27 @@ export interface DynamicPromptInterface extends PostContentValidation {
 }
 
 // Interface for AI functions params
-export interface AIParamsInterface {
-  model: string;
-  apiKey: string;
+export interface AIParamsInterface extends UserConfigInterface {
   prompt: string;
+}
+
+// Interface for Chrome Messages coming from `background-script`
+export interface ContentScriptMessage {
+  type: "INIT_USER_CONFIG" | "USER_CONFIG_UPDATED";
+  payload: UserConfigInterface;
+}
+
+// Interface for dropdown options
+export interface ToneOption {
+  title: string;
+  slug: ToneType;
+  svg: string;
+}
+
+// Interface for AI models list
+export interface AIModelInterface {
+  title: string;
+  slug: string;
 }
 
 // Type face for tones

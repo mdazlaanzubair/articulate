@@ -9,8 +9,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        background: "./src/extension/background.ts",
-        "content-script": "./src/extension/content-script.ts",
+        background: "./src/background-script.ts",
+        content: "./src/content-script.ts",
       },
       output: {
         entryFileNames: `[name].js`,

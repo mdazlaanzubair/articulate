@@ -1,42 +1,83 @@
 {
     "manifest_version": 3,
-    "name": "Articulate",
+    "name": "Articulate - LinkedIn Comment Enhancer",
     "version": "1.0.0",
-    "description": "An AI assistant that helps in articulating thoughts and ideas in a a structured and professional language without hassle.",
+    "description": "AI-powered tone adjustment and writing assistance for LinkedIn comments.",
+    "author": "Muhammad Azlaan Zubair",
+    "homepage_url": "https://mdazlaanzubair.com/",
+    "icons": {
+        "16": "icons/icon16.png",
+        "32": "icons/icon32.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
     "action": {
         "default_popup": "index.html",
+        "default_title": "Articulate",
         "default_icon": {
             "16": "icons/icon16.png",
+            "32": "icons/icon32.png",
             "48": "icons/icon48.png",
-            "128": "icons/icon120.png"
+            "128": "icons/icon128.png"
         }
     },
-    "content_scripts": [
-        {
-            "matches": [
-                "https://www.linkedin.com/feed/*"
-            ],
-            "js": [
-                "content-script.js"
-            ]
-        }
-    ],
     "background": {
         "service_worker": "background.js",
         "type": "module"
     },
+    "content_scripts": [
+        {
+            "run_at": "document_idle",
+            "matches": [
+                "*://www.linkedin.com/*",
+                "*://linkedin.com/*",
+                "https://www.linkedin.com/feed/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
     "permissions": [
         "storage",
         "activeTab",
-        "scripting",
         "tabs"
     ],
     "host_permissions": [
-        "https://www.linkedin.com/*"
+        "*://www.linkedin.com/*",
+        "*://linkedin.com/*",
+        "https://api.openai.com/*",
+        "https://generativelanguage.googleapis.com/*"
     ],
-    "icons": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon120.png"
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "icons/*",
+                "assets/*"
+            ],
+            "matches": [
+                "*://www.linkedin.com/*",
+                "*://linkedin.com/*"
+            ]
+        }
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self';"
+    },
+    "minimum_chrome_version": "95",
+    "commands": {
+        "open_articulate": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+A",
+                "mac": "Command+Shift+A"
+            },
+            "description": "Open Articulate dropdown"
+        }
+    },
+    "externally_connectable": {
+        "matches": [
+            "*://www.linkedin.com/*",
+            "*://linkedin.com/*"
+        ]
     }
 }

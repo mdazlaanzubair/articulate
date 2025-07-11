@@ -1,55 +1,44 @@
-/**
- * Get a value from Chrome local storage.
- * @param key - The key to retrieve.
- * @returns A promise that resolves with the stored value or null if not found.
- */
+// Retrieves a value from Chrome's local storage.
 export async function getStoredData<T = any>(key: string): Promise<T | null> {
-  try {
-    return await new Promise<T | null>((resolve, reject) => {
-      chrome.storage.local.get([key], (result) => {
-        if (chrome.runtime.lastError) {
-          reject(
-            new Error(
-              `Failed to get key "${key}": ${chrome.runtime.lastError.message}`
-            )
-          );
-          return;
-        }
-        resolve(result[key] ?? null); // Return null if key not found
-      });
+  return new Promise<T | null>((resolve) => {
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          `Failed to get key "${key}":`,
+          chrome.runtime.lastError.message
+        );
+        resolve(null);
+        return;
+      }
+      console.log(`Retrieved data for key "${key}":`, result[key]);
+      resolve(result[key] ?? null);
     });
-  } catch (error) {
-    console.error("getStoredData error:", error);
+  }).catch((error) => {
+    console.error("Error in getStoredData:", error);
     return null;
-  }
+  });
 }
 
-/**
- * Set a value in Chrome local storage.
- * @param key - The key to set.
- * @param data - The data to store.
- * @returns A promise that resolves when the data is stored.
- */
+// Sets a value in Chrome's local storage.
 export async function setStoredData<T = any>(
   key: string,
   data: T
 ): Promise<boolean> {
-  try {
-    return await new Promise<boolean>((resolve, reject) => {
-      chrome.storage.local.set({ [key]: data }, () => {
-        if (chrome.runtime.lastError) {
-          reject(
-            new Error(
-              `Failed to set key "${key}": ${chrome.runtime.lastError.message}`
-            )
-          );
-          return;
-        }
-        resolve(true);
-      });
+  return new Promise<boolean>((resolve) => {
+    chrome.storage.local.set({ [key]: data }, () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          `Failed to set key "${key}":`,
+          chrome.runtime.lastError.message
+        );
+        resolve(false);
+        return;
+      }
+      console.log(`Successfully set data for key "${key}":`, data);
+      resolve(true);
     });
-  } catch (error) {
-    console.error("setStoredData error:", error);
+  }).catch((error) => {
+    console.error("Error in setStoredData:", error);
     return false;
-  }
+  });
 }
